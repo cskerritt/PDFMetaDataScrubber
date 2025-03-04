@@ -1,0 +1,56 @@
+import pikepdf
+import tkinter as tk
+from tkinter import filedialog, messagebox
+import os
+
+def check_metadata(pdf_path):
+    """Check and return metadata of a PDF file."""
+    pdf = pikepdf.Pdf.open(pdf_path)
+    return pdf.metadata
+
+def remove_metadata(input_pdf, output_pdf):
+    """Remove all metadata from a PDF file and save the cleaned version."""
+    pdf = pikepdf.Pdf.open(input_pdf)
+    pdf.metadata.clear()  # Clears all metadata
+    pdf.save(output_pdf)
+
+def select_file():
+    """Opens a file dialog to select a PDF and processes metadata removal."""
+    file_path = filedialog.askopenfilename(title="Select a PDF File", filetypes=[("PDF Files", "*.pdf")])
+    
+    if not file_path:
+        return  # If user cancels file selection, do nothing
+
+    # Generate output filename by appending "_cleaned" before file extension
+    base_name, ext = os.path.splitext(file_path)
+    output_pdf = f"{base_name}_cleaned{ext}"
+
+    # Check metadata before removal
+    before_metadata = check_metadata(file_path)
+    before_text = "\n".join([f"{key}: {value}" for key, value in before_metadata.items()]) if before_metadata else "No metadata found"
+    
+    # Remove metadata
+    remove_metadata(file_path, output_pdf)
+    
+    # Check metadata after removal
+    after_metadata = check_metadata(output_pdf)
+    after_text = "\n".join([f"{key}: {value}" for key, value in after_metadata.items()]) if after_metadata else "Metadata successfully removed."
+
+    # Display results in a messagebox
+    messagebox.showinfo("Metadata Removal Results",
+                        f"📄 **Selected File:** {file_path}\n\n"
+                        f"🧐 **Metadata Before Removal:**\n{before_text}\n\n"
+                        f"✅ **Metadata After Removal:**\n{after_text}\n\n"
+                        f"💾 **Cleaned File Saved As:** {output_pdf}")
+
+# Create GUI window
+root = tk.Tk()
+root.title("PDF Metadata Remover")
+root.geometry("400x200")
+
+# Button to select a file and process it
+btn_select = tk.Button(root, text="Select PDF File", command=select_file, font=("Arial", 12), padx=10, pady=5)
+btn_select.pack(pady=40)
+
+# Run the GUI event loop
+root.mainloop()
